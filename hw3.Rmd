@@ -1,0 +1,85 @@
+---
+title: "Homework #3"
+author: "Kobe Pranivong; illuminobe"
+date: "2/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tips at Restaurants
+```{r}
+data(tips, package="reshape2")
+```
+
+1. How many parties did the waiter serve? Store the number in numParty and print.
+```{r}
+numParty <- length(tips$total_bill)
+print(numParty)
+```
+The waiter served 244 parties.
+
+2. What are the types of variables in the data frame tips? Include the code and also explain verbally.
+```{r}
+str(tips)
+```
+There are 7 types of variables: two numerical, one integer, and four factored categorical. I used str(tips) because it shows useful data such as how the variable "sex" has 2 levels being "Female" and "Male".
+
+3. Create a vector named day containing the day of visits in tips. The factor levels should be ordered from Thursday to Sunday. Print the variable.
+```{r}
+day <- tips$day
+day <- relevel(day, "Thur")
+print(levels(day))
+```
+
+4. Create a data frame named female5 containing the meal paid by a female payer in a party with size greater than or equal to 5. Print the data frame.
+```{r}
+female5 <- tips[(tips$sex == "Female" & tips$size >= 5), ]
+print(female5)
+```
+
+5. How does the tipping amount (tip) depend on the overall bill (total_bill)? Use the ggplot2 package to make a chart. Describe the relationship in words.
+```{r}
+library(ggplot2)
+p <- ggplot(tips, aes(x = total_bill, y = tip)) + geom_point() + labs(x = "Total Bill", y = "Tip", title = "Tips vs Total Bill")
+m <- lm(tip ~ total_bill, data = tips)
+p + geom_abline(aes(intercept = m$coefficients[1], slope = m$coefficients[2]), col = "red")
+```
+
+As the value of the tipping amount increases, the value of the overall bill increases; therefore, the relationship is there is a positive correlation between the tipping amount and the overall bill.
+
+6. Describe at least two types of anomalies in the previous plot. What do they mean?
+
+First of all, while tip outliers exist for all values of total bill, outliers are more extreme at higher total bill amounts. This is probably due to taking the tipping percentage of higher amounts. Lastly, there is evidence that customers rounded their bill values, causing a deviation from the expected tip rate. A linear grouping can be observed around the $2 and $3 dollar tip amounts.
+
+7. Introduce a variable tiprate into the data set which stands for the rate of tips. What is the average rate for tips? Explain verbally.
+```{r}
+tips$tiprate <- (tips$tip / tips$total_bill) * 100
+print(mean(tips$tiprate))
+```
+The average rate for tips is 16.08%.
+
+8. Make a boxplot of the tip rate by time. The x-axis should be ordered by lunch and then dinner. Use ggplot2 to make a chart. Verbally explain the chart.
+```{r}
+ggplot(data = tips, aes(x = time, y = tiprate)) + geom_boxplot() + scale_x_discrete(limits = c("Lunch", "Dinner"))
+```
+
+Tip rates during lunch have a lower range than during dinner. Lunch has no outliers while dinner has four outliers. Although their medians are very similar, the box (middle 50% of the data) for lunch is a little more than for dinner.
+
+9. How does smoking behavior and gender of the person who pays impact the relationship between tip and total bill? Find a visualization that incorporates all four variables. Interpret the result.
+```{r}
+tips$gender_smoke <- paste(tips$sex, ", ", ifelse(tips$smoker == "Yes", "Smoker", "Non-smoker"))
+ggplot(data=tips, aes(x=total_bill, y=tip, color=gender_smoke)) + 
+geom_point() + geom_smooth(method='lm',formula=y~x, se=F)
+```
+
+My interpretation is (1) both male and female non-smokers generally tip more than smokers, (2) there doesn't seem to be a distinct difference in tip rate between genders, and (3) men have a greater chance of having higher bills than women. 
+
+10. Use ggplot2 to find a graphical summary of the relationship between day of the week and gender of the person paying the bill. What can you say about this relationship?
+```{r}
+ggplot(tips, aes(x = day, fill = sex)) + geom_bar(position = "fill") + ylab("proportion") + scale_x_discrete(limits = c("Thur", "Fri", "Sat", "Sun"))
+``` 
+
+On weekdays, males are equally likely to pay the bill as females; however, on weekends, males are more likely to pay the bill than females.
